@@ -1,0 +1,135 @@
+@import 'https://fonts.googleapis.com/css?family=Raleway';
+
+
+
+
+html,
+body {
+    margin: 0px;
+    background-color: rgb(39, 39, 39);
+}
+
+
+div.container {
+    display: flex;
+    justify-content: space-between;
+    font-family: 20px Raleway;
+    margin: 0 auto;
+    padding: 2em 3em;
+    /* text-align: left; */
+}
+
+.nav-left {
+
+    font-family: 'Dancing Script', cursive;
+    font-family: 'Michroma', sans-serif;
+}
+
+
+
+
+
+
+.nav-right {
+    text-align: right;
+}
+
+
+div.container a {
+    color: #FFF;
+    text-decoration: none;
+    font: 20px Raleway;
+    margin: 0px 10px;
+    padding: 10px 10px;
+    position: relative;
+    z-index: 0;
+    cursor: pointer;
+}
+
+
+
+
+.orange {
+    background: rgb(53, 53, 53)
+}
+
+
+
+/* Pull up and down  */
+div.pullUpDown a:before,
+div.pullUpDown a:after {
+    position: absolute;
+    width: 100%;
+    height: 2px;
+    left: 0px;
+    content: '';
+    background: #ce590c;
+    opacity: 0.5;
+    transition: all 0.3s;
+}
+
+div.pullUpDown a:before {
+    top: 0px;
+}
+
+div.pullUpDown a:after {
+    bottom: 0px;
+}
+
+div.pullUpDown a:hover:before,
+div.pullUpDown a:hover:after {
+    height: 100%;
+}
+
+
+
+
+.info {
+    position: relative;
+    width: 100%;
+    height: 100vh;
+    background-image: url('img/homepage1.jpeg');
+    background-size: cover;
+    background-position: center;
+}
+
+.info::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+
+
+
+
+
+.mainInfo {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    color: #FFF;
+}
+
+.mainInfo h2 {
+    font-size: 24px;
+    font-weight: bold;
+    color: #ff9a57;
+}
+
+.st {
+    font-size: 22px;
+    font-weight: bold;
+    color: #ff9a57;
+}
+
+.mainInfo p {
+    font-size: 18px;
+    line-height: 1.5;
+}

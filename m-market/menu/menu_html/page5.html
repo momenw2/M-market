@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Food Delivery Service</title>
+    <link rel="stylesheet" href="../../css/menu.css">
+</head>
+
+<body>
+
+    <div class="container orange pullUpDown">
+        <div class="nav-left">
+            <a href="../../html/home2.html">HOME</a>
+            <a href="page1.html">Menu</a>
+            <a href="../../html/order.html">Orders</a>
+            <a href="../../html/cart.html">Cart</a>
+        </div>
+
+        <div class="nav-right">
+            <a href="../../html/profile.html" class="nav-right">Profile</a>
+            <!-- <a href="#" class="nav-right">Logout</a> -->
+            <a href="#" onclick="logout()">Logout</a>
+        </div>
+    </div>
+    <br>
+    <div id="filters">
+        <label for="sort">Sort by:</label>
+        <select id="sort">
+            <option value="default">Default</option>
+            <option value="alphabetical">Alphabetical</option>
+        </select>
+        <label for="vegetarianToggle" class="toggle-label">Vegetarian only:</label>
+        <div class="slide-toggle">
+            <input type="checkbox" id="vegetarianToggle" class="checkbox">
+            <label for="vegetarianToggle" class="slider"></label>
+        </div>
+
+    </div>
+
+    <div class="container">
+        <div id="dishes"></div>
+    </div>
+
+    <div id="pagination">
+        <a href="page1.html" class="page-link">1</a>
+        <a href="page2.html" class="page-link">2</a>
+        <a href="page3.html" class="page-link">3</a>
+        <a href="page4.html" class="page-link">4</a>
+        <a href="page5.html" class="page-link">5</a>
+        <a href="page6.html" class="page-link">6</a>
+        <a href="page7.html" class="page-link">7</a>
+        <a href="page8.html" class="page-link">8</a>
+    </div>
+
+    <div id="page-count"></div>
+
+    <script src="../menu_js/page5.js"></script>
+
+</body>
+
+</html>
