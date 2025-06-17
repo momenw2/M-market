@@ -1,0 +1,130 @@
+@import 'https://fonts.googleapis.com/css?family=Raleway';
+
+html,
+body {
+    margin: 0px;
+    background-color: rgb(39, 39, 39);
+    color: #FFF;
+}
+
+
+div.container {
+    display: flex;
+    justify-content: space-between;
+    font-family: 20px Raleway;
+    margin: 0 auto;
+    padding: 2em 3em;
+    /* text-align: left; */
+}
+
+.nav-left {
+    text-align: left;
+}
+
+.nav-right {
+    text-align: right;
+}
+
+
+div.container a {
+    color: #FFF;
+    text-decoration: none;
+    font: 20px Raleway;
+    margin: 0px 10px;
+    padding: 10px 10px;
+    position: relative;
+    z-index: 0;
+    cursor: pointer;
+}
+
+
+
+
+.orange {
+    background: rgb(53, 53, 53)
+}
+
+
+
+/* Pull up and down  */
+div.pullUpDown a:before,
+div.pullUpDown a:after {
+    position: absolute;
+    width: 100%;
+    height: 2px;
+    left: 0px;
+    content: '';
+    background: #ce590c;
+    opacity: 0.5;
+    transition: all 0.3s;
+}
+
+div.pullUpDown a:before {
+    top: 0px;
+}
+
+div.pullUpDown a:after {
+    bottom: 0px;
+}
+
+div.pullUpDown a:hover:before,
+div.pullUpDown a:hover:after {
+    height: 100%;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+.order-details {
+    margin-bottom: 20px;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+
+
+
+
+
+
+
+.total-cost {
+    float: right;
+    font-weight: bold;
+    color: #ce590c;
+}
+
+
+.confirm-button {
+    border-radius: 10px;
+    /* Change the border radius value as per your preference */
+    background-color: #ce590c;
+    /* Change the color value to '#ff9a57' */
+    color: #ffffff;
+    /* Change the text color to white */
+    padding: 7px 10px;
+    /* Adjust the padding as needed */
+    font-size: 14px;
+    /* Adjust the font size as needed */
+    border: none;
+    /* Remove the button border if desired */
+    cursor: pointer;
+
+}
+
+h1 {
+    text-align: center;
+    font-family: 20px Raleway;
+}
