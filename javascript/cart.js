@@ -44,101 +44,105 @@ async function getToken() {
 
   return token;
 }
+
+async function fetchWithAuth(url, options = {}) {
+  const token = await getToken();
+  const defaultHeaders = {
+    Authorization: `Bearer ${token}`,
+    Accept: "application/json",
+  };
+  
+  const response = await fetch(url, {
+    ...options,
+    headers: {
+      ...defaultHeaders,
+      ...(options.headers || {})
+    }
+  });
+  
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+  
+  return response;
+}
+
 function createCartItemElement(cartItem) {
   const cartItemDiv = document.createElement("div");
   cartItemDiv.classList.add("cart-item");
 
   const itemImage = document.createElement("img");
-  itemImage.src = item.image;
-  itemImage.alt = item.name;
+  itemImage.src = cartItem.image;
+  itemImage.alt = cartItem.name;
   cartItemDiv.appendChild(itemImage);
 
   const itemName = document.createElement("span");
-  itemName.textContent = item.name;
+  itemName.textContent = cartItem.name;
   cartItemDiv.appendChild(itemName);
 
-  addQuantityControls(parent, cartItem);
-
+  addQuantityControls(cartItemDiv, cartItem);
+  
   const itemPrice = document.createElement("span");
-  itemPrice.setAttribute("data-price", item.price);
+  itemPrice.setAttribute("data-price", cartItem.price);
   itemPrice.classList.add("item-price");
   cartItemDiv.appendChild(document.createTextNode(" "));
   cartItemDiv.appendChild(itemPrice);
 
-  addDeleteButton(parent, cartItem);
-
+  addDeleteButton(cartItemDiv, cartItem);
+  
   return cartItemDiv;
 }
 
-function addQuantityControls(parent, item) {
+function addQuantityControls(parent, cartItem) {
   const increaseButton = document.createElement("button");
   increaseButton.textContent = "+";
   increaseButton.classList.add("quantity-button");
-  increaseButton.addEventListener("click", () =>
-    updateCartItemQuantity(item.id, true)
-  );
+  increaseButton.addEventListener("click", () => updateCartItemQuantity(cartItem.id, true));
   parent.appendChild(increaseButton);
 
   const itemQuantity = document.createElement("span");
-  itemQuantity.id = `quantity-${item.id}`;
+  itemQuantity.id = `quantity-${cartItem.id}`;
   itemQuantity.classList.add("item-quantity");
   const cartItems = JSON.parse(localStorage.getItem("cartItems")) || {};
-  const quantity = cartItems[item.id] || 1;
+  const quantity = cartItems[cartItem.id] || 1;
   itemQuantity.textContent = quantity.toString();
   parent.appendChild(itemQuantity);
 
   const decreaseButton = document.createElement("button");
   decreaseButton.textContent = "-";
   decreaseButton.classList.add("quantity-button");
-  decreaseButton.addEventListener("click", () =>
-    updateCartItemQuantity(item.id, false)
-  );
+  decreaseButton.addEventListener("click", () => updateCartItemQuantity(cartItem.id, false));
   parent.appendChild(decreaseButton);
 }
 
-function addDeleteButton(parent, item) {
+function addDeleteButton(parent, cartItem) {
   const deleteButton = document.createElement("button");
   deleteButton.textContent = "Delete";
   deleteButton.classList.add("delete-button");
-  deleteButton.addEventListener("click", () => deleteCartItem(item.id, parent));
+  deleteButton.addEventListener("click", () => deleteCartItem(cartItem.id, parent));
   parent.appendChild(deleteButton);
 }
 
 async function fetchCartItems() {
   try {
     ensureElementsExist();
-    const token = await getToken();
-
-    const response = await fetch(cartUrl, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        Accept: "application/json",
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const cartItems = await response.json(); // Changed from 'data'
+    const response = await fetchWithAuth(cartUrl);
+    const cartItems = await response.json();
     console.log("Cart items:", cartItems);
 
-    const cartItemsContainer = document.getElementById("cart-items"); // More specific name
+    const cartItemsContainer = document.getElementById("cart-items");
     cartItemsContainer.innerHTML = "";
     let totalPrice = 0;
 
-    cartItems.forEach((cartItem) => {
-      const cartItemElement = createCartItemElement(cartItem); // More specific name
+    cartItems.forEach(cartItem => {
+      const cartItemElement = createCartItemElement(cartItem);
       cartItemsContainer.appendChild(cartItemElement);
-
+      
       if (typeof cartItem.price === "number") {
-        const quantity =
-          JSON.parse(localStorage.getItem("cartItems"))?.[cartItem.id] || 1;
+        const quantity = JSON.parse(localStorage.getItem("cartItems"))?.[cartItem.id] || 1;
         const itemTotalPrice = cartItem.price * quantity;
         totalPrice += itemTotalPrice;
-        cartItemElement.querySelector(
-          ".item-price"
-        ).textContent = `${itemTotalPrice.toFixed(2)} ₽`;
+        cartItemElement.querySelector(".item-price").textContent = `${itemTotalPrice.toFixed(2)} ₽`;
       }
     });
 
@@ -149,6 +153,68 @@ async function fetchCartItems() {
     console.log("Error fetching cart items:", error);
     ensureElementsExist();
     totalPriceElement.textContent = `Error fetching cart items: ${error.message}`;
+    if (process.env.NODE_ENV === "test") {
+      throw error;
+    }
+  }
+}
+
+function updateCartItemQuantity(itemId, increase) {
+  ensureElementsExist();
+  const itemQuantityElement = document.getElementById(`quantity-${itemId}`);
+  let quantity = parseInt(itemQuantityElement.textContent);
+
+  if (increase) {
+    quantity += 1;
+  } else if (quantity > 1) {
+    quantity -= 1;
+  }
+
+  itemQuantityElement.textContent = quantity.toString();
+
+  const cartItems = JSON.parse(localStorage.getItem("cartItems")) || {};
+  cartItems[itemId] = quantity;
+  localStorage.setItem("cartItems", JSON.stringify(cartItems));
+
+  calculateTotalPrice();
+}
+
+function calculateTotalPrice() {
+  ensureElementsExist();
+  const cartItems = document.getElementsByClassName("cart-item");
+  let totalPrice = 0;
+
+  Array.from(cartItems).forEach((item) => {
+    const itemPriceElement = item.querySelector("span[data-price]");
+    const itemQuantityElement = item.querySelector(`span[id^=quantity-]`);
+
+    if (itemPriceElement && itemQuantityElement) {
+      const itemPrice = parseFloat(itemPriceElement.getAttribute("data-price"));
+      const itemQuantity = parseInt(itemQuantityElement.textContent);
+
+      if (!isNaN(itemPrice) && !isNaN(itemQuantity)) {
+        const itemTotalPrice = itemPrice * itemQuantity;
+        totalPrice += itemTotalPrice;
+        itemPriceElement.textContent = `${itemTotalPrice.toFixed(2)} ₽`;
+      }
+    }
+  });
+
+  totalPriceElement.textContent = `Total Price: ${totalPrice.toFixed(2)} ₽`;
+  localStorage.setItem("totalPrice", JSON.stringify(totalPrice.toFixed(2)));
+}
+
+async function deleteCartItem(itemId, cartItemDiv) {
+  try {
+    ensureElementsExist();
+    const deleteUrl = `${cartUrl}/dish/${itemId}`;
+    await fetchWithAuth(deleteUrl, { method: "DELETE" });
+    cartItemDiv.remove();
+    calculateTotalPrice();
+  } catch (error) {
+    console.log("Error deleting cart item:", error);
+    ensureElementsExist();
+    totalPriceElement.textContent = `Error deleting item: ${error.message}`;
     if (process.env.NODE_ENV === "test") {
       throw error;
     }
