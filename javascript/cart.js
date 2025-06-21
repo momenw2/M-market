@@ -59,6 +59,17 @@ class CartService {
     this.updateLocalQuantity(itemId, newQuantity);
     return newQuantity;
   }
+  calculateTotalPrice(cartItems) {
+    return cartItems.reduce(
+      (total, item) => total + item.price * this.getCurrentQuantity(item.id),
+      0
+    );
+  }
+
+  updateTotalPrice(total) {
+    this.totalPriceElement.textContent = `Total Price: ${total.toFixed(2)} ₽`;
+    localStorage.setItem("totalPrice", JSON.stringify(total.toFixed(2)));
+  }
 }
 
 const cartService = new CartService();
@@ -170,28 +181,9 @@ function updateCartItemQuantity(itemId, increase) {
 }
 
 function calculateTotalPrice() {
-  let totalPrice = 0;
-  Array.from(document.getElementsByClassName("cart-item")).forEach((item) => {
-    const priceElement = CartDOMHelper.getPriceElement(item);
-    const quantityElement = item.querySelector(`span[id^=quantity-]`);
-
-    if (itemPriceElement && itemQuantityElement) {
-      const itemPrice = parseFloat(itemPriceElement.getAttribute("data-price"));
-      const itemQuantity = parseInt(itemQuantityElement.textContent);
-
-      if (!isNaN(itemPrice) && !isNaN(itemQuantity)) {
-        const itemTotalPrice = itemPrice * itemQuantity;
-        totalPrice += itemTotalPrice;
-        itemPriceElement.textContent = `${itemTotalPrice.toFixed(2)} ₽`;
-      }
-    }
-  });
-
-  cartService.totalPriceElement.textContent = `Total Price: ${totalPrice.toFixed(
-    2
-  )} ₽`;
-  localStorage.setItem("totalPrice", JSON.stringify(totalPrice.toFixed(2)));
-  cartService.updateTotalPrice(totalPrice);
+  const items = Array.from(document.getElementsByClassName("cart-item"));
+  const total = cartService.calculateTotalPrice(items);
+  cartService.updateTotalPrice(total);
 }
 
 async function deleteCartItem(itemId, cartItemDiv) {
