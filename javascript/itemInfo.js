@@ -1,4 +1,5 @@
-    const dishId = window.location.hash.substr(1); // Retrieve the dish ID from the URL
+const urlParams = new URLSearchParams(window.location.search);
+const dishId = urlParams.get('id');
 
     const apiUrl = `https://food-delivery.kreosoft.ru/api/dish/${dishId}`;
 
