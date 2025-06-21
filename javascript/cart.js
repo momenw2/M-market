@@ -170,12 +170,10 @@ function updateCartItemQuantity(itemId, increase) {
 }
 
 function calculateTotalPrice() {
-  const cartItems = document.getElementsByClassName("cart-item");
   let totalPrice = 0;
-
-  Array.from(cartItems).forEach((item) => {
-    const itemPriceElement = item.querySelector("span[data-price]");
-    const itemQuantityElement = item.querySelector(`span[id^=quantity-]`);
+  Array.from(document.getElementsByClassName("cart-item")).forEach((item) => {
+    const priceElement = CartDOMHelper.getPriceElement(item);
+    const quantityElement = item.querySelector(`span[id^=quantity-]`);
 
     if (itemPriceElement && itemQuantityElement) {
       const itemPrice = parseFloat(itemPriceElement.getAttribute("data-price"));
@@ -193,6 +191,7 @@ function calculateTotalPrice() {
     2
   )} ₽`;
   localStorage.setItem("totalPrice", JSON.stringify(totalPrice.toFixed(2)));
+  cartService.updateTotalPrice(totalPrice);
 }
 
 async function deleteCartItem(itemId, cartItemDiv) {
