@@ -57,14 +57,12 @@
     }
     }
 
-    function logout() {
     fetch("https://food-delivery.kreosoft.ru/api/account/logout", {
-        method: "POST",
+    method: "POST",
     })
-        .then((response) => {
+    .then(() => {
         window.location.href = "../../index.html";
-        })
-        .catch((error) => {
+    })
+    .catch((error) => {
         console.error("Logout failed:", error);
-        });
-    }
+    });
