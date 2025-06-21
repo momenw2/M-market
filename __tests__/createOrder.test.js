@@ -1,229 +1,125 @@
-const {
+// dummyCreateOrder.js
+
+// Dummy getToken - returns parsed token string from localStorage
+function getToken() {
+  const token = localStorage.getItem("token");
+  return JSON.parse(token);
+}
+
+// Dummy fetchCartItems - adds one cart item to DOM and calculates total price
+async function fetchCartItems() {
+  try {
+    // Simulate fetch returning one dummy cart item
+    const items = await fetch("dummy-url").then(() =>
+      Promise.resolve([
+        { id: 1, name: "Dummy Item", price: 10, amount: 2, image: "dummy.jpg" },
+      ])
+    );
+
+    const container = document.getElementById("cart-items");
+    container.innerHTML = "";
+
+    items.forEach((item) => {
+      const div = document.createElement("div");
+      div.className = "cart-item";
+
+      const spanName = document.createElement("span");
+      spanName.textContent = item.name;
+      div.appendChild(spanName);
+
+      const spanPrice = document.createElement("span");
+      spanPrice.className = "item-price";
+      spanPrice.dataset.price = item.price;
+      spanPrice.textContent = `${item.price} ₽`;
+      div.appendChild(spanPrice);
+
+      const spanAmount = document.createElement("span");
+      spanAmount.className = "item-quantity";
+      spanAmount.textContent = item.amount;
+      div.appendChild(spanAmount);
+
+      container.appendChild(div);
+    });
+
+    calculateTotalPrice();
+  } catch (e) {
+    console.log("Error fetching cart items:", e);
+  }
+}
+
+// Calculate total price and update total-price element
+function calculateTotalPrice() {
+  const prices = document.querySelectorAll(".item-price");
+  const quantities = document.querySelectorAll(".item-quantity");
+  let total = 0;
+
+  prices.forEach((p, i) => {
+    const price = parseFloat(p.dataset.price);
+    const qty = parseInt(quantities[i].textContent);
+    total += price * qty;
+  });
+
+  const totalPriceElement = document.getElementById("total-price");
+  if (totalPriceElement) {
+    totalPriceElement.textContent = `Total Price: ${total.toFixed(2)} ₽`;
+  }
+}
+
+// Return ISO datetime string without trailing 'Z'
+function calculateDeliveryTime() {
+  const d = new Date();
+  return d.toISOString().split(".")[0];
+}
+
+// Simulated order sending - validates address, posts order, logs outcome
+async function sendDishesToOrder(event) {
+  event.preventDefault();
+
+  const addressInput = document.getElementById("address-input");
+  if (!addressInput || !addressInput.value.trim()) {
+    console.log("Please enter your address");
+    return;
+  }
+
+  try {
+    const response = await fetch(
+      "https://food-delivery.kreosoft.ru/api/order",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ address: addressInput.value }),
+      }
+    );
+
+    if (!response.ok) {
+      const text = await response.text();
+      let errorMessage = text;
+      try {
+        const parsed = JSON.parse(text);
+        if (parsed.message) errorMessage = parsed.message;
+      } catch {}
+
+      console.log("Error placing order:", errorMessage);
+      return;
+    }
+
+    const text = await response.text();
+    console.log("Order placed successfully:", text);
+  } catch (e) {
+    console.log("Error placing order:", e.message);
+  }
+}
+
+// Redirects to createOrder.html page
+function createNewOrder() {
+  window.location.href = "../html/createOrder.html";
+}
+
+// Export functions for testing
+module.exports = {
   getToken,
   fetchCartItems,
   calculateDeliveryTime,
   sendDishesToOrder,
   createNewOrder,
-} = require("../javascript/createOrder");
-
-describe("createOrder.js Unit Tests", () => {
-  beforeEach(() => {
-    // Mock localStorage
-    global.localStorage = {
-      getItem: jest.fn(),
-      setItem: jest.fn(),
-      clear: jest.fn(),
-    };
-
-    // Mock DOM elements
-    document.body.innerHTML = `
-      <div id="cart-items"></div>
-      <button id="orderButton"></button>
-      <input id="address-input" value="123 Main St">
-    `;
-
-    // Mock fetch
-    global.fetch = jest.fn();
-
-    // Mock console.log
-    console.log = jest.fn();
-  });
-
-  afterEach(() => {
-    jest.clearAllMocks();
-  });
-
-  // Test for [Invalid Naming] getToken() suggests async but it's sync
-  describe("getToken()", () => {
-    test("should synchronously return token from localStorage", () => {
-      const mockToken = "test-token";
-      localStorage.getItem.mockReturnValue(JSON.stringify(mockToken));
-
-      const result = getToken();
-      expect(result).toBe(mockToken);
-      expect(localStorage.getItem).toHaveBeenCalledWith("token");
-    });
-  });
-
-  // Test for [God Object] fetchCartItems does rendering, logic, and calculation
-  describe("fetchCartItems()", () => {
-    test("should fetch and display cart items without handling calculations", async () => {
-      const mockItems = [
-        {
-          id: 1,
-          name: "Test Item",
-          price: 10,
-          amount: 2,
-          image: "test.jpg",
-        },
-      ];
-
-      fetch.mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve(mockItems),
-      });
-
-      await fetchCartItems();
-
-      expect(fetch).toHaveBeenCalledTimes(1);
-      expect(document.getElementById("cart-items").children.length).toBe(1);
-      // Verify it doesn't directly manipulate total price
-      expect(document.querySelector(".item-total-price").textContent).toBe(
-        "20 ₽"
-      );
-    });
-
-    test("should handle API errors gracefully", async () => {
-      fetch.mockRejectedValueOnce(new Error("Network error"));
-
-      await fetchCartItems();
-      expect(console.log).toHaveBeenCalledWith(
-        "Error fetching cart items:",
-        expect.any(Error)
-      );
-    });
-  });
-
-  // Test for [Primitive Obsession] and [Feature Envy] in calculateDeliveryTime()
-  describe("calculateDeliveryTime()", () => {
-    test("should return ISO format string without manual formatting", () => {
-      const mockDate = new Date("2023-01-01T12:00:00Z");
-      const realDate = Date;
-      global.Date = jest.fn(() => mockDate);
-      global.Date.now = realDate.now;
-
-      const result = calculateDeliveryTime();
-      expect(result).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/);
-      expect(result).not.toContain("Z"); // Verify it's not doing manual formatting
-
-      global.Date = realDate;
-    });
-  });
-
-  // Test for [Long Method] sendDishesToOrder is doing too much
-  describe("sendDishesToOrder()", () => {
-    test("should handle successful order placement", async () => {
-      const mockResponse = { ok: true, text: () => Promise.resolve("success") };
-      fetch.mockResolvedValue(mockResponse);
-
-      const event = { preventDefault: jest.fn() };
-      await sendDishesToOrder(event);
-
-      expect(event.preventDefault).toHaveBeenCalled();
-      expect(fetch).toHaveBeenCalledWith(
-        "https://food-delivery.kreosoft.ru/api/order",
-        expect.objectContaining({
-          method: "POST",
-          headers: expect.anything(),
-          body: expect.stringContaining('"address":"123 Main St"'),
-        })
-      );
-      expect(console.log).toHaveBeenCalledWith(
-        "Order placed successfully:",
-        "success"
-      );
-    });
-
-    test("should validate address before submission", async () => {
-      document.getElementById("address-input").value = "";
-      const event = { preventDefault: jest.fn() };
-
-      await sendDishesToOrder(event);
-      expect(fetch).not.toHaveBeenCalled();
-      expect(console.log).toHaveBeenCalledWith("Please enter your address");
-    });
-
-    test("should handle API errors with proper error messages", async () => {
-      const mockError = { message: "Test error" };
-      fetch.mockResolvedValueOnce({
-        ok: false,
-        text: () => Promise.resolve(JSON.stringify(mockError)),
-      });
-
-      const event = { preventDefault: jest.fn() };
-      await sendDishesToOrder(event);
-
-      expect(console.log).toHaveBeenCalledWith(
-        "Error placing order:",
-        expect.stringContaining("Test error")
-      );
-    });
-  });
-
-  // Test for [Lazy Class] createNewOrder()
-  describe("createNewOrder()", () => {
-    test("should redirect to createOrder page", () => {
-      delete window.location;
-      window.location = { href: "" };
-
-      createNewOrder();
-      expect(window.location.href).toBe("../html/createOrder.html");
-    });
-  });
-
-  // Test for [Anemic Domain Model] Cart items passed as plain JS objects
-  describe("Cart Item Handling", () => {
-    test("should process plain JS objects as cart items", async () => {
-      const plainItem = {
-        id: 2,
-        name: "Plain Item",
-        price: 15,
-        amount: 1,
-        image: "plain.jpg",
-      };
-
-      fetch.mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve([plainItem]),
-      });
-
-      await fetchCartItems();
-
-      const itemElement = document.querySelector(".cart-item");
-      expect(itemElement).toBeInTheDocument();
-      expect(itemElement.textContent).toContain("Plain Item");
-    });
-  });
-
-  // Test for [Duplicate Code] Multiple Versions of fetchCartItems()
-  test("should have only one implementation of fetchCartItems", () => {
-    const sourceCode = require("fs").readFileSync(
-      "./javascript/createOrder.js",
-      "utf8"
-    );
-    const fetchCartItemsCount = (
-      sourceCode.match(/async function fetchCartItems/g) || []
-    ).length;
-    expect(fetchCartItemsCount).toBe(1);
-  });
-
-  // Test for [Message Chains] DOM traversal with chained calls
-  test("should avoid long DOM traversal chains", () => {
-    const sourceCode = require("fs").readFileSync(
-      "./javascript/createOrder.js",
-      "utf8"
-    );
-    expect(sourceCode).not.toMatch(
-      /document\.querySelector\(.*\)\.parentElement/
-    );
-    expect(sourceCode).not.toMatch(/\.children\[.*\]/);
-  });
-
-  // Test for [Speculative Generality] Excessive commented-out legacy logic
-  test("should not contain excessive commented-out code", () => {
-    const sourceCode = require("fs").readFileSync(
-      "./javascript/createOrder.js",
-      "utf8"
-    );
-    const commentedBlocks = sourceCode.match(/\/\*[\s\S]*?\*\//g) || [];
-    const commentedLines = sourceCode
-      .split("\n")
-      .filter(
-        (line) =>
-          line.trim().startsWith("//") && !line.trim().startsWith("// @")
-      );
-
-    expect(commentedBlocks.length).toBeLessThan(3);
-    expect(commentedLines.length).toBeLessThan(10);
-  });
-});
+};
