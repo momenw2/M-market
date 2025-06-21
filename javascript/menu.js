@@ -37,7 +37,7 @@
         const paginationDiv = document.getElementById("pagination");
 
         let currentRow = null;
-        let displayedItems = 0;
+        let itemCount = 0;
         const totalItems = data.dishes.length;
         const totalPages = Math.ceil(totalItems / itemsPerPage);
 
