@@ -126,15 +126,14 @@
 
     async function handleOrderError(error) {
     console.log("Error placing order:", error);
-    // You could add user-facing error handling here
     }
 
     async function sendDishesToOrder(event) {
     event.preventDefault();
     try {
-        const address = await validateAddress(
-        document.getElementById("address-input").value.trim()
-        );
+        const addressInput = document.getElementById("address-input");
+        const address = addressInput ? addressInput.value.trim() : "";
+
         const payload = await createOrderPayload(address);
         await submitOrder(payload);
         await handleOrderSuccess();
