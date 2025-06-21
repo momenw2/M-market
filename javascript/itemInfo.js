@@ -35,7 +35,7 @@
     dishName.textContent = name;
     dishDescription.textContent = description;
     dishPrice.textContent = `Price: ${
-        data.price !== undefined ? data.price + ' ₽' : getUnavailableText()
+        data.price !== undefined ? data.price + " ₽" : getUnavailableText()
     }`;
 
     dishImg.src = image;
@@ -45,6 +45,16 @@
 
     function getUnavailableText() {
     return "Price not available";
+    }
+
+    function handleDishError(error) {
+    console.error("Error fetching dish details:", error);
+    const errorContainer = document.getElementById("error-message");
+    if (errorContainer) {
+        errorContainer.textContent =
+        "Failed to load dish details. Please try again later.";
+        errorContainer.style.color = "red";
+    }
     }
 
     function logout() {
