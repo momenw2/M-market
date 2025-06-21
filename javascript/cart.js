@@ -44,7 +44,7 @@ async function getToken() {
 
   return token;
 }
-function createCartItemElement(item) {
+function createCartItemElement(cartItem) {
   const cartItemDiv = document.createElement("div");
   cartItemDiv.classList.add("cart-item");
 
@@ -57,7 +57,7 @@ function createCartItemElement(item) {
   itemName.textContent = item.name;
   cartItemDiv.appendChild(itemName);
 
-  addQuantityControls(cartItemDiv, item);
+  addQuantityControls(parent, cartItem);
 
   const itemPrice = document.createElement("span");
   itemPrice.setAttribute("data-price", item.price);
@@ -65,7 +65,7 @@ function createCartItemElement(item) {
   cartItemDiv.appendChild(document.createTextNode(" "));
   cartItemDiv.appendChild(itemPrice);
 
-  addDeleteButton(cartItemDiv, item);
+  addDeleteButton(parent, cartItem);
 
   return cartItemDiv;
 }
@@ -120,23 +120,24 @@ async function fetchCartItems() {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    const data = await response.json();
-    console.log("Cart items:", data);
+    const cartItems = await response.json(); // Changed from 'data'
+    console.log("Cart items:", cartItems);
 
-    const cartItemsDiv = document.getElementById("cart-items");
-    cartItemsDiv.innerHTML = "";
+    const cartItemsContainer = document.getElementById("cart-items"); // More specific name
+    cartItemsContainer.innerHTML = "";
     let totalPrice = 0;
 
-    data.forEach((item) => {
-      const cartItemDiv = createCartItemElement(item);
-      cartItemsDiv.appendChild(cartItemDiv);
+    cartItems.forEach((cartItem) => {
+      // Changed from 'item'
+      const cartItemElement = createCartItemElement(cartItem); // More specific name
+      cartItemsContainer.appendChild(cartItemElement);
 
-      if (typeof item.price === "number") {
+      if (typeof cartItem.price === "number") {
         const quantity =
-          JSON.parse(localStorage.getItem("cartItems"))?.[item.id] || 1;
-        const itemTotalPrice = item.price * quantity;
+          JSON.parse(localStorage.getItem("cartItems"))?.[cartItem.id] || 1;
+        const itemTotalPrice = cartItem.price * quantity;
         totalPrice += itemTotalPrice;
-        cartItemDiv.querySelector(
+        cartItemElement.querySelector(
           ".item-price"
         ).textContent = `${itemTotalPrice.toFixed(2)} ₽`;
       }
