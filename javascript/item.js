@@ -1,7 +1,7 @@
-const apiUrl = "https://food-delivery.kreosoft.ru/api/dish/";
+const itemApiUrl = "https://food-delivery.kreosoft.ru/api/dish/";
 
     function displayItem(itemId) {
-    fetch(apiUrl + itemId)
+    fetch(itemApiUrl + itemId)
         .then((response) => response.json())
         .then((item) => {
         console.log("Data from API:", item);
