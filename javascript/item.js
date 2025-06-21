@@ -12,6 +12,19 @@ const apiUrl = "https://food-delivery.kreosoft.ru/api/dish/";
         console.log("Error fetching data:", error);
         });
     }
+    class CartItem {
+        constructor({ id, name, price, currency }) {
+            this.id = id;
+            this.name = name;
+            this.price = price;
+            this.currency = currency;
+        }
+
+        formatPrice() {
+            return `${this.price} ${this.currency}`;
+        }
+        }
+
 
     function renderDish(item) {
     const dishDiv = document.getElementById("dish");
@@ -39,11 +52,6 @@ const apiUrl = "https://food-delivery.kreosoft.ru/api/dish/";
 
     const addButton = document.createElement("button");
     addButton.textContent = "Add to cart";
-    addButton.addEventListener("click", () => {
-        const cartItem = createCartItem(item);
-        // TODO: store cartItem in local storage or send to server
-    });
-
     dishDiv.appendChild(addButton);
     }
 
