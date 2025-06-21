@@ -1,12 +1,13 @@
     // createOrder.js - After Commit 2
-    function getToken() {
+    function getTokenFromStorage() {
+
     const token = JSON.parse(localStorage.getItem("token"));
     return token;
     }
 
     async function fetchCartItems() {
     try {
-        const token = getToken();
+        const token = getTokenFromStorage();
         const response = await fetch(
         "https://food-delivery.kreosoft.ru/api/basket",
         {
@@ -95,7 +96,7 @@
     }
 
     async function submitOrder(payload) {
-    const token = getToken();
+    const token = getTokenFromStorage();
     const response = await fetch("https://food-delivery.kreosoft.ru/api/order", {
         method: "POST",
         headers: {
