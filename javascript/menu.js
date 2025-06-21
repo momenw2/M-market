@@ -3,6 +3,31 @@
     const itemsPerPage = 10; // set the number of items to display per page
     let currentPage = 1;
 
+    class Dish {
+    constructor({ id, name, description, price, currency, image }) {
+        this.id = id;
+        this.name = name;
+        this.description = description;
+        this.price = price;
+        this.currency = currency;
+        this.image = image;
+    }
+
+    getFormattedPrice() {
+        return `Price: ${this.price} ${this.currency}`;
+    }
+    }
+
+    class CartItem {
+    constructor({ id, name, price, currency }) {
+        this.id = id;
+        this.name = name;
+        this.price = price;
+        this.currency = currency;
+    }
+    }
+    v;
+
     fetch(apiUrl)
     .then((response) => response.json())
     .then((data) => {
@@ -70,7 +95,6 @@
         addButton.classList.add("addToCart");
         addButton.addEventListener("click", () => {
             const cartItem = new CartItem(dish);
-            // storeCartItem(cartItem); // placeholder for future logic
         });
 
         dishDiv.appendChild(addButton);
