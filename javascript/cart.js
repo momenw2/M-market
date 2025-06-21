@@ -1,71 +1,59 @@
 const cartUrl = "https://food-delivery.kreosoft.ru/api/basket";
 
-let totalPriceElement;
-
-function ensureElementsExist() {
-  if (!totalPriceElement) {
-    totalPriceElement = document.getElementById("total-price") || {
+class CartService {
+  constructor() {
+    this.totalPriceElement = document.getElementById("total-price") || {
       textContent: "",
       style: {},
     };
   }
-}
 
-async function retrieveToken() {
-  try {
+  async fetchWithAuth(url, options = {}) {
+    const token = await this.getToken();
+    const response = await fetch(url, {
+      ...options,
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: "application/json",
+        ...(options.headers || {}),
+      },
+    });
+
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+    return response;
+  }
+
+  async getToken() {
+    let token = JSON.parse(localStorage.getItem("token"));
+    if (!token) token = await this.retrieveToken();
+    return token;
+  }
+
+  async retrieveToken() {
     const response = await fetch(
       "https://food-delivery.kreosoft.ru/api/account/profile",
-      {
-        headers: {
-          Accept: "text/plain",
-        },
-      }
+      { headers: { Accept: "text/plain" } }
     );
-
-    if (response.ok) {
-      const token = await response.text();
-      localStorage.setItem("token", JSON.stringify(token));
-      return token;
-    } else {
+    if (!response.ok)
       throw new Error(`Failed to retrieve token: ${response.status}`);
-    }
-  } catch (error) {
-    console.log("Error retrieving token:", error);
-    throw error;
+    const token = await response.text();
+    localStorage.setItem("token", JSON.stringify(token));
+    return token;
+  }
+
+  updateLocalQuantity(itemId, quantity) {
+    const cartItems = JSON.parse(localStorage.getItem("cartItems")) || {};
+    cartItems[itemId] = quantity;
+    localStorage.setItem("cartItems", JSON.stringify(cartItems));
+  }
+
+  getCurrentQuantity(itemId) {
+    const cartItems = JSON.parse(localStorage.getItem("cartItems")) || {};
+    return cartItems[itemId] || 1;
   }
 }
 
-async function getToken() {
-  let token = JSON.parse(localStorage.getItem("token"));
-
-  if (!token) {
-    token = await retrieveToken();
-  }
-
-  return token;
-}
-
-async function fetchWithAuth(url, options = {}) {
-  const token = await getToken();
-  const defaultHeaders = {
-    Authorization: `Bearer ${token}`,
-    Accept: "application/json",
-  };
-  
-  const response = await fetch(url, {
-    ...options,
-    headers: {
-      ...defaultHeaders,
-      ...(options.headers || {})
-    }
-  });
-  
-  if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
-  }
-  
-  return response;
-}
+const cartService = new CartService();
 
 function createCartItemElement(cartItem) {
   const cartItemDiv = document.createElement("div");
@@ -81,7 +69,7 @@ function createCartItemElement(cartItem) {
   cartItemDiv.appendChild(itemName);
 
   addQuantityControls(cartItemDiv, cartItem);
-  
+
   const itemPrice = document.createElement("span");
   itemPrice.setAttribute("data-price", cartItem.price);
   itemPrice.classList.add("item-price");
@@ -89,7 +77,7 @@ function createCartItemElement(cartItem) {
   cartItemDiv.appendChild(itemPrice);
 
   addDeleteButton(cartItemDiv, cartItem);
-  
+
   return cartItemDiv;
 }
 
@@ -97,21 +85,25 @@ function addQuantityControls(parent, cartItem) {
   const increaseButton = document.createElement("button");
   increaseButton.textContent = "+";
   increaseButton.classList.add("quantity-button");
-  increaseButton.addEventListener("click", () => updateCartItemQuantity(cartItem.id, true));
+  increaseButton.addEventListener("click", () =>
+    updateCartItemQuantity(cartItem.id, true)
+  );
   parent.appendChild(increaseButton);
 
   const itemQuantity = document.createElement("span");
   itemQuantity.id = `quantity-${cartItem.id}`;
   itemQuantity.classList.add("item-quantity");
-  const cartItems = JSON.parse(localStorage.getItem("cartItems")) || {};
-  const quantity = cartItems[cartItem.id] || 1;
-  itemQuantity.textContent = quantity.toString();
+  itemQuantity.textContent = cartService
+    .getCurrentQuantity(cartItem.id)
+    .toString();
   parent.appendChild(itemQuantity);
 
   const decreaseButton = document.createElement("button");
   decreaseButton.textContent = "-";
   decreaseButton.classList.add("quantity-button");
-  decreaseButton.addEventListener("click", () => updateCartItemQuantity(cartItem.id, false));
+  decreaseButton.addEventListener("click", () =>
+    updateCartItemQuantity(cartItem.id, false)
+  );
   parent.appendChild(decreaseButton);
 }
 
@@ -119,14 +111,15 @@ function addDeleteButton(parent, cartItem) {
   const deleteButton = document.createElement("button");
   deleteButton.textContent = "Delete";
   deleteButton.classList.add("delete-button");
-  deleteButton.addEventListener("click", () => deleteCartItem(cartItem.id, parent));
+  deleteButton.addEventListener("click", () =>
+    deleteCartItem(cartItem.id, parent)
+  );
   parent.appendChild(deleteButton);
 }
 
 async function fetchCartItems() {
   try {
-    ensureElementsExist();
-    const response = await fetchWithAuth(cartUrl);
+    const response = await cartService.fetchWithAuth(cartUrl);
     const cartItems = await response.json();
     console.log("Cart items:", cartItems);
 
@@ -134,25 +127,27 @@ async function fetchCartItems() {
     cartItemsContainer.innerHTML = "";
     let totalPrice = 0;
 
-    cartItems.forEach(cartItem => {
+    cartItems.forEach((cartItem) => {
       const cartItemElement = createCartItemElement(cartItem);
       cartItemsContainer.appendChild(cartItemElement);
-      
+
       if (typeof cartItem.price === "number") {
-        const quantity = JSON.parse(localStorage.getItem("cartItems"))?.[cartItem.id] || 1;
+        const quantity = cartService.getCurrentQuantity(cartItem.id);
         const itemTotalPrice = cartItem.price * quantity;
         totalPrice += itemTotalPrice;
-        cartItemElement.querySelector(".item-price").textContent = `${itemTotalPrice.toFixed(2)} ₽`;
+        cartItemElement.querySelector(
+          ".item-price"
+        ).textContent = `${itemTotalPrice.toFixed(2)} ₽`;
       }
     });
 
-    ensureElementsExist();
-    totalPriceElement.textContent = `Total Price: ${totalPrice.toFixed(2)} ₽`;
+    cartService.totalPriceElement.textContent = `Total Price: ${totalPrice.toFixed(
+      2
+    )} ₽`;
     localStorage.setItem("totalPrice", JSON.stringify(totalPrice.toFixed(2)));
   } catch (error) {
     console.log("Error fetching cart items:", error);
-    ensureElementsExist();
-    totalPriceElement.textContent = `Error fetching cart items: ${error.message}`;
+    cartService.totalPriceElement.textContent = `Error fetching cart items: ${error.message}`;
     if (process.env.NODE_ENV === "test") {
       throw error;
     }
@@ -160,27 +155,17 @@ async function fetchCartItems() {
 }
 
 function updateCartItemQuantity(itemId, increase) {
-  ensureElementsExist();
   const itemQuantityElement = document.getElementById(`quantity-${itemId}`);
   let quantity = parseInt(itemQuantityElement.textContent);
 
-  if (increase) {
-    quantity += 1;
-  } else if (quantity > 1) {
-    quantity -= 1;
-  }
+  quantity = increase ? quantity + 1 : Math.max(1, quantity - 1);
+  itemQuantityElement.textContent = quantity;
 
-  itemQuantityElement.textContent = quantity.toString();
-
-  const cartItems = JSON.parse(localStorage.getItem("cartItems")) || {};
-  cartItems[itemId] = quantity;
-  localStorage.setItem("cartItems", JSON.stringify(cartItems));
-
+  cartService.updateLocalQuantity(itemId, quantity);
   calculateTotalPrice();
 }
 
 function calculateTotalPrice() {
-  ensureElementsExist();
   const cartItems = document.getElementsByClassName("cart-item");
   let totalPrice = 0;
 
@@ -200,21 +185,21 @@ function calculateTotalPrice() {
     }
   });
 
-  totalPriceElement.textContent = `Total Price: ${totalPrice.toFixed(2)} ₽`;
+  cartService.totalPriceElement.textContent = `Total Price: ${totalPrice.toFixed(
+    2
+  )} ₽`;
   localStorage.setItem("totalPrice", JSON.stringify(totalPrice.toFixed(2)));
 }
 
 async function deleteCartItem(itemId, cartItemDiv) {
   try {
-    ensureElementsExist();
     const deleteUrl = `${cartUrl}/dish/${itemId}`;
-    await fetchWithAuth(deleteUrl, { method: "DELETE" });
+    await cartService.fetchWithAuth(deleteUrl, { method: "DELETE" });
     cartItemDiv.remove();
     calculateTotalPrice();
   } catch (error) {
     console.log("Error deleting cart item:", error);
-    ensureElementsExist();
-    totalPriceElement.textContent = `Error deleting item: ${error.message}`;
+    cartService.totalPriceElement.textContent = `Error deleting item: ${error.message}`;
     if (process.env.NODE_ENV === "test") {
       throw error;
     }
@@ -248,4 +233,5 @@ module.exports = {
   calculateTotalPrice,
   updateCartItemQuantity,
   deleteCartItem,
+  CartService,
 };
