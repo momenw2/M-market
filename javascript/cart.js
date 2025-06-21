@@ -44,6 +44,65 @@ async function getToken() {
 
   return token;
 }
+function createCartItemElement(item) {
+  const cartItemDiv = document.createElement("div");
+  cartItemDiv.classList.add("cart-item");
+
+  const itemImage = document.createElement("img");
+  itemImage.src = item.image;
+  itemImage.alt = item.name;
+  cartItemDiv.appendChild(itemImage);
+
+  const itemName = document.createElement("span");
+  itemName.textContent = item.name;
+  cartItemDiv.appendChild(itemName);
+
+  addQuantityControls(cartItemDiv, item);
+
+  const itemPrice = document.createElement("span");
+  itemPrice.setAttribute("data-price", item.price);
+  itemPrice.classList.add("item-price");
+  cartItemDiv.appendChild(document.createTextNode(" "));
+  cartItemDiv.appendChild(itemPrice);
+
+  addDeleteButton(cartItemDiv, item);
+
+  return cartItemDiv;
+}
+
+function addQuantityControls(parent, item) {
+  const increaseButton = document.createElement("button");
+  increaseButton.textContent = "+";
+  increaseButton.classList.add("quantity-button");
+  increaseButton.addEventListener("click", () =>
+    updateCartItemQuantity(item.id, true)
+  );
+  parent.appendChild(increaseButton);
+
+  const itemQuantity = document.createElement("span");
+  itemQuantity.id = `quantity-${item.id}`;
+  itemQuantity.classList.add("item-quantity");
+  const cartItems = JSON.parse(localStorage.getItem("cartItems")) || {};
+  const quantity = cartItems[item.id] || 1;
+  itemQuantity.textContent = quantity.toString();
+  parent.appendChild(itemQuantity);
+
+  const decreaseButton = document.createElement("button");
+  decreaseButton.textContent = "-";
+  decreaseButton.classList.add("quantity-button");
+  decreaseButton.addEventListener("click", () =>
+    updateCartItemQuantity(item.id, false)
+  );
+  parent.appendChild(decreaseButton);
+}
+
+function addDeleteButton(parent, item) {
+  const deleteButton = document.createElement("button");
+  deleteButton.textContent = "Delete";
+  deleteButton.classList.add("delete-button");
+  deleteButton.addEventListener("click", () => deleteCartItem(item.id, parent));
+  parent.appendChild(deleteButton);
+}
 
 async function fetchCartItems() {
   try {
@@ -68,69 +127,20 @@ async function fetchCartItems() {
     cartItemsDiv.innerHTML = "";
     let totalPrice = 0;
 
-    const promises = data.map((item) => {
-      const cartItemDiv = document.createElement("div");
-      cartItemDiv.classList.add("cart-item");
-
-      const itemImage = document.createElement("img");
-      itemImage.src = item.image;
-      itemImage.alt = item.name;
-      cartItemDiv.appendChild(itemImage);
-
-      const itemName = document.createElement("span");
-      itemName.textContent = item.name;
-      cartItemDiv.appendChild(itemName);
-
-      const increaseButton = document.createElement("button");
-      increaseButton.textContent = "+";
-      increaseButton.classList.add("quantity-button");
-      increaseButton.addEventListener("click", () =>
-        updateCartItemQuantity(item.id, true)
-      );
-      cartItemDiv.appendChild(increaseButton);
-
-      const itemQuantity = document.createElement("span");
-      itemQuantity.id = `quantity-${item.id}`;
-      itemQuantity.classList.add("item-quantity");
-      const cartItems = JSON.parse(localStorage.getItem("cartItems")) || {};
-      const quantity = cartItems[item.id] || 1;
-      itemQuantity.textContent = quantity.toString();
-      cartItemDiv.appendChild(itemQuantity);
-
-      const decreaseButton = document.createElement("button");
-      decreaseButton.textContent = "-";
-      decreaseButton.classList.add("quantity-button");
-      decreaseButton.addEventListener("click", () =>
-        updateCartItemQuantity(item.id, false)
-      );
-      cartItemDiv.appendChild(decreaseButton);
-
-      const itemPrice = document.createElement("span");
-      itemPrice.setAttribute("data-price", item.price);
-      itemPrice.classList.add("item-price");
-      cartItemDiv.appendChild(document.createTextNode(" "));
-      cartItemDiv.appendChild(itemPrice);
-
-      const deleteButton = document.createElement("button");
-      deleteButton.textContent = "Delete";
-      deleteButton.classList.add("delete-button");
-      deleteButton.addEventListener("click", () =>
-        deleteCartItem(item.id, cartItemDiv)
-      );
-      cartItemDiv.appendChild(deleteButton);
-
+    data.forEach((item) => {
+      const cartItemDiv = createCartItemElement(item);
       cartItemsDiv.appendChild(cartItemDiv);
 
       if (typeof item.price === "number") {
+        const quantity =
+          JSON.parse(localStorage.getItem("cartItems"))?.[item.id] || 1;
         const itemTotalPrice = item.price * quantity;
         totalPrice += itemTotalPrice;
-        itemPrice.textContent = `${itemTotalPrice.toFixed(2)} ₽`;
+        cartItemDiv.querySelector(
+          ".item-price"
+        ).textContent = `${itemTotalPrice.toFixed(2)} ₽`;
       }
-
-      return Promise.resolve();
     });
-
-    await Promise.all(promises);
 
     ensureElementsExist();
     totalPriceElement.textContent = `Total Price: ${totalPrice.toFixed(2)} ₽`;
@@ -139,81 +149,6 @@ async function fetchCartItems() {
     console.log("Error fetching cart items:", error);
     ensureElementsExist();
     totalPriceElement.textContent = `Error fetching cart items: ${error.message}`;
-    if (process.env.NODE_ENV === "test") {
-      throw error;
-    }
-  }
-}
-
-function updateCartItemQuantity(itemId, increase) {
-  ensureElementsExist();
-  const itemQuantityElement = document.getElementById(`quantity-${itemId}`);
-  let quantity = parseInt(itemQuantityElement.textContent);
-
-  if (increase) {
-    quantity += 1;
-  } else if (quantity > 1) {
-    quantity -= 1;
-  }
-
-  itemQuantityElement.textContent = quantity.toString();
-
-  const cartItems = JSON.parse(localStorage.getItem("cartItems")) || {};
-  cartItems[itemId] = quantity;
-  localStorage.setItem("cartItems", JSON.stringify(cartItems));
-
-  calculateTotalPrice();
-}
-
-function calculateTotalPrice() {
-  ensureElementsExist();
-  const cartItems = document.getElementsByClassName("cart-item");
-  let totalPrice = 0;
-
-  Array.from(cartItems).forEach((item) => {
-    const itemPriceElement = item.querySelector("span[data-price]");
-    const itemQuantityElement = item.querySelector(`span[id^=quantity-]`);
-
-    if (itemPriceElement && itemQuantityElement) {
-      const itemPrice = parseFloat(itemPriceElement.getAttribute("data-price"));
-      const itemQuantity = parseInt(itemQuantityElement.textContent);
-
-      if (!isNaN(itemPrice) && !isNaN(itemQuantity)) {
-        const itemTotalPrice = itemPrice * itemQuantity;
-        totalPrice += itemTotalPrice;
-        itemPriceElement.textContent = `${itemTotalPrice.toFixed(2)} ₽`;
-      }
-    }
-  });
-
-  totalPriceElement.textContent = `Total Price: ${totalPrice.toFixed(2)} ₽`;
-  localStorage.setItem("totalPrice", JSON.stringify(totalPrice.toFixed(2)));
-}
-
-async function deleteCartItem(itemId, cartItemDiv) {
-  try {
-    ensureElementsExist();
-    const deleteUrl = `${cartUrl}/dish/${itemId}`;
-    const token = await getToken();
-
-    const response = await fetch(deleteUrl, {
-      method: "DELETE",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        Accept: "application/json",
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`Failed to delete item: ${response.status}`);
-    }
-
-    cartItemDiv.remove();
-    calculateTotalPrice();
-  } catch (error) {
-    console.log("Error deleting cart item:", error);
-    ensureElementsExist();
-    totalPriceElement.textContent = `Error deleting item: ${error.message}`;
     if (process.env.NODE_ENV === "test") {
       throw error;
     }
