@@ -1,15 +1,10 @@
-// dummyCreateOrder.js
-
-// Dummy getToken - returns parsed token string from localStorage
 function getToken() {
   const token = localStorage.getItem("token");
   return JSON.parse(token);
 }
 
-// Dummy fetchCartItems - adds one cart item to DOM and calculates total price
 async function fetchCartItems() {
   try {
-    // Simulate fetch returning one dummy cart item
     const items = await fetch("dummy-url").then(() =>
       Promise.resolve([
         { id: 1, name: "Dummy Item", price: 10, amount: 2, image: "dummy.jpg" },
@@ -47,7 +42,6 @@ async function fetchCartItems() {
   }
 }
 
-// Calculate total price and update total-price element
 function calculateTotalPrice() {
   const prices = document.querySelectorAll(".item-price");
   const quantities = document.querySelectorAll(".item-quantity");
@@ -65,13 +59,11 @@ function calculateTotalPrice() {
   }
 }
 
-// Return ISO datetime string without trailing 'Z'
 function calculateDeliveryTime() {
   const d = new Date();
   return d.toISOString().split(".")[0];
 }
 
-// Simulated order sending - validates address, posts order, logs outcome
 async function sendDishesToOrder(event) {
   event.preventDefault();
 
@@ -110,12 +102,10 @@ async function sendDishesToOrder(event) {
   }
 }
 
-// Redirects to createOrder.html page
 function createNewOrder() {
   window.location.href = "../html/createOrder.html";
 }
 
-// Export functions for testing
 module.exports = {
   getToken,
   fetchCartItems,
