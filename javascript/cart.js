@@ -41,10 +41,11 @@ class CartService {
     return token;
   }
 
-  updateLocalQuantity(itemId, quantity) {
+  updateLocalQuantity(itemId, newQuantity) {
     const cartItems = JSON.parse(localStorage.getItem("cartItems")) || {};
-    cartItems[itemId] = quantity;
+    cartItems[itemId] = newQuantity;
     localStorage.setItem("cartItems", JSON.stringify(cartItems));
+    return cartItems;
   }
 
   getCurrentQuantity(itemId) {
@@ -160,7 +161,7 @@ function updateCartItemQuantity(itemId, increase) {
 
   quantity = increase ? quantity + 1 : Math.max(1, quantity - 1);
   itemQuantityElement.textContent = quantity;
-
+  
   cartService.updateLocalQuantity(itemId, quantity);
   calculateTotalPrice();
 }
