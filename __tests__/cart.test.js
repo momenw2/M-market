@@ -160,5 +160,3 @@ describe("deleteCartItem", () => {
     expect(document.getElementById("cart-items").children.length).toBe(0);
   });
 });
-cd /Users/momenwael/Desktop/MAIN/Projects/m-market
-git init
