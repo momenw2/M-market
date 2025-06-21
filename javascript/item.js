@@ -55,5 +55,9 @@ const apiUrl = "https://food-delivery.kreosoft.ru/api/dish/";
     dishDiv.appendChild(addButton);
     }
 
-// Call the displayItem function with the ID of the item you want to display
-displayItem("3fa85f64-5717-4562-b3fc-2c963f66afa6");
+const params = new URLSearchParams(window.location.search);
+const itemId = params.get("id");
+if (itemId) displayItem(itemId);
+else {
+    console.error("Item ID not found in URL");
+}
