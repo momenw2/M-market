@@ -52,6 +52,13 @@ class CartService {
     const cartItems = JSON.parse(localStorage.getItem("cartItems")) || {};
     return cartItems[itemId] || 1;
   }
+
+  async updateItemQuantity(itemId, increase) {
+    const current = this.getCurrentQuantity(itemId);
+    const newQuantity = increase ? current + 1 : Math.max(1, current - 1);
+    this.updateLocalQuantity(itemId, newQuantity);
+    return newQuantity;
+  }
 }
 
 const cartService = new CartService();
@@ -156,14 +163,10 @@ async function fetchCartItems() {
 }
 
 function updateCartItemQuantity(itemId, increase) {
-  const itemQuantityElement = document.getElementById(`quantity-${itemId}`);
-  let quantity = parseInt(itemQuantityElement.textContent);
-
-  quantity = increase ? quantity + 1 : Math.max(1, quantity - 1);
-  itemQuantityElement.textContent = quantity;
-  
-  cartService.updateLocalQuantity(itemId, quantity);
-  calculateTotalPrice();
+  cartService.updateItemQuantity(itemId, increase).then((newQuantity) => {
+    document.getElementById(`quantity-${itemId}`).textContent = newQuantity;
+    calculateTotalPrice();
+  });
 }
 
 function calculateTotalPrice() {
