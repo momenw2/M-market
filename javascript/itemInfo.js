@@ -4,6 +4,9 @@
 
     class Dish {
     constructor({ name, description, price, image }) {
+        if (!name || !description || !image) {
+        throw new Error("Invalid dish data");
+        }
         this.name = name;
         this.description = description;
         this.price = price;
@@ -18,10 +21,13 @@
     fetch(apiUrl)
     .then((response) => response.json())
     .then((data) => {
+        try {
         const dish = new Dish(data);
         displayDishDetails(dish);
-    })
-    .catch(handleDishError);
+        } catch (error) {
+        handleDishError(error);
+        }
+    });
 
     function displayDishDetails(data) {
     const { name, description, price, image } = data;
