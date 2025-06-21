@@ -45,6 +45,14 @@
     const form = document.querySelector("form");
     const error = document.getElementById("error");
 
+    class LoginData {
+    constructor(email, password) {
+        this.email = email;
+        this.password = password;
+    }
+    }
+
+
     form.addEventListener("submit", (e) => {
     e.preventDefault();
     const credentials = getCredentials();
