@@ -44,6 +44,9 @@
 
     const form = document.querySelector("form");
     const error = document.getElementById("error");
+    const emailInput = form.querySelector('input[name="email"]');
+    const passwordInput = form.querySelector('input[name="password"]');
+
 
     class LoginData {
     constructor(email, password) {
@@ -66,8 +69,8 @@
     });
 
     function getCredentials() {
-    const email = form.querySelector('input[name="email"]').value.trim();
-    const password = form.querySelector('input[name="password"]').value.trim();
+    const email = emailInput.value.trim();
+    const password = passwordInput.value.trim();
     return new LoginData(email, password);
     }
 
