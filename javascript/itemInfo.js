@@ -18,8 +18,8 @@
     fetch(apiUrl)
     .then((response) => response.json())
     .then((data) => {
-    const dish = new Dish(data);
-    displayDishDetails(dish);
+        const dish = new Dish(data);
+        displayDishDetails(dish);
     })
     .catch(handleDishError);
 
@@ -32,16 +32,19 @@
     dishImg.src = dish.image;
     dishImg.alt = dish.name;
 
-
     dishName.textContent = name;
     dishDescription.textContent = description;
     dishPrice.textContent = `Price: ${
-        price !== undefined ? price + " ₽" : getUnavailableText()
+        data.price !== undefined ? data.price + ' ₽' : getUnavailableText()
     }`;
 
     dishImg.src = image;
     dishImg.alt = name;
     dishImg.addEventListener("load", () => dishImg.classList.add("loaded"));
+    }
+
+    function getUnavailableText() {
+    return "Price not available";
     }
 
     function logout() {
