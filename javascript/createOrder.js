@@ -3,6 +3,19 @@
     return token;
     }
 
+    class CartItem {
+    constructor({ name, image, amount, price }) {
+        this.name = name;
+        this.image = image;
+        this.amount = amount;
+        this.price = price;
+    }
+
+    getTotalPrice() {
+        return this.price * this.amount;
+    }
+    }
+
     async function fetchCartItems() {
     try {
         const token = getTokenFromStorage();
